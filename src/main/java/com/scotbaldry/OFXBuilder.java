@@ -10,11 +10,9 @@ import java.util.UUID;
 
 public class OFXBuilder {
     private List<SecurityPrice> _securityPrices;
-    private MapperParser _mapper;
 
-    public OFXBuilder(List<SecurityPrice> securityPrices, MapperParser mapper) {
+    public OFXBuilder(List<SecurityPrice> securityPrices) {
         _securityPrices = securityPrices;
-        _mapper = mapper;
     }
 
     public OFX buildOFX() {

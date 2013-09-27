@@ -6,6 +6,8 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
+import javax.xml.namespace.QName;
+import java.io.BufferedOutputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -28,9 +30,10 @@ public class App {
 
     public void run() throws IOException {
         MapperParser mapperParser = new MapperParser("c:/develop/fidelity_mappings.csv");
-        FidelityHoldingsCSVParser parser = new FidelityHoldingsCSVParser("c:/users/scot baldry/downloads/fidelity2holdings.csv");
+        mapperParser.parse();
+        FidelityHoldingsCSVParser parser = new FidelityHoldingsCSVParser("c:/users/scot baldry/downloads/fidelity2holdings.csv", mapperParser);
         parser.parse();
-        OFXBuilder ofxBuilder = new OFXBuilder(parser.getSecurityPrices(), mapperParser);
+        OFXBuilder ofxBuilder = new OFXBuilder(parser.getSecurityPrices());
 
         FileOutputStream fileOutputStream = new FileOutputStream("c:/develop/fidelity2holdings.ofx");
         marshallXML(ofxBuilder.buildOFX(), fileOutputStream);
@@ -41,14 +44,20 @@ public class App {
             JAXBContext context = JAXBContext.newInstance(OFX.class);
             Marshaller jaxbMarshaller = context.createMarshaller();
 
-            // output pretty printed
-            jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
-
             ObjectFactory objectFactory = new ObjectFactory();
             JAXBElement<OFX> ofxElement = objectFactory.createOFX(ofx);
+            JAXBElement<> element = new JAXBElement<> (new QName("http://www.something.com/something","FoodSchema"), .class, ofx);
+
+            ofxElement.setNil(true);
+
+            // output pretty printed
+            jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
+            jaxbMarshaller.setProperty(Marshaller.JAXB_FRAGMENT, true);
+            out.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n".getBytes());
+            out.write("<?OFX OFXHEADER=\"200\" VERSION=\"200\" SECURITY=\"NONE\" OLDFILEUID=\"NONE\" NEWFILEUID=\"NONE\"?>".getBytes());
             jaxbMarshaller.marshal(ofxElement, out);
 
-        } catch (JAXBException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }

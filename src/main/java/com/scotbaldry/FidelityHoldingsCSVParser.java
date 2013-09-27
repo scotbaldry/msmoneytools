@@ -15,10 +15,12 @@ import java.util.Map;
 public class FidelityHoldingsCSVParser {
     private String[] _headerFormat = {"Provider", "Holding", "Income status", "Price per unit", "Date", "Units", "Holding valuation", "Holding currency code", "Reporting valuation", "Reporting currency code"};
     private File _csvFile;
+    private MapperParser _mapper;
     private Map<String, String[]> _prices = new HashMap<>();
 
-    public FidelityHoldingsCSVParser(String csvFilename) {
+    public FidelityHoldingsCSVParser(String csvFilename, MapperParser mapper) {
         _csvFile = new File(csvFilename);
+        _mapper = mapper;
     }
 
     public void parse() throws IOException {
@@ -77,8 +79,11 @@ public class FidelityHoldingsCSVParser {
             SecurityPrice securityPrice;
             String[] columns = _prices.get(s);
 
-            securityPrice = new SecurityPrice(columns[0],       // Symbol
-                                              columns[1],       // Security Name
+            String mappedSymbol = _mapper.getSecurityNameIndex().get(columns[1]).getToSymbol();
+            String mappedName = _mapper.getSecurityNameIndex().get(columns[1]).getToSecurityName();
+
+            securityPrice = new SecurityPrice(mappedSymbol,     // Symbol
+                                              mappedName,       // Security Name
                                               columns[3],       // Price
                                               columns[7],       // Currency
                                               columns[4],       // Date
@@ -88,7 +93,6 @@ public class FidelityHoldingsCSVParser {
         }
 
         return securityPriceList;
-
     }
 
     public int getRowCount() {

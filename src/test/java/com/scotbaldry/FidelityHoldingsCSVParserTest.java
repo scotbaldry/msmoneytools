@@ -25,13 +25,13 @@ public class FidelityHoldingsCSVParserTest extends TestCase {
     }
 
     public void testParseValidFile() throws IOException {
-        FidelityHoldingsCSVParser fidelityCSVParser = new FidelityHoldingsCSVParser("/Users/scot/Downloads/AllHoldings.csv");
+        FidelityHoldingsCSVParser fidelityCSVParser = new FidelityHoldingsCSVParser("/Users/scot/Downloads/AllHoldings.csv", null); //todo
         fidelityCSVParser.parse();
         assertEquals("Check number of rows is correct", 26, fidelityCSVParser.getRowCount());
     }
 
     public void testParseInvalidFile() {
-        FidelityHoldingsCSVParser fidelityCSVParser = new FidelityHoldingsCSVParser("/Users/scot/Downloads/data.csv");
+        FidelityHoldingsCSVParser fidelityCSVParser = new FidelityHoldingsCSVParser("/Users/scot/Downloads/data.csv", null); //todo
         try {
             fidelityCSVParser.parse();
         } catch (IOException e) {
