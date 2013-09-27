@@ -10,9 +10,11 @@ import java.util.UUID;
 
 public class OFXBuilder {
     private List<SecurityPrice> _securityPrices;
+    private MapperParser _mapper;
 
-    public OFXBuilder(List<SecurityPrice> securityPrices) {
+    public OFXBuilder(List<SecurityPrice> securityPrices, MapperParser mapper) {
         _securityPrices = securityPrices;
+        _mapper = mapper;
     }
 
     public OFX buildOFX() {
@@ -40,8 +42,10 @@ public class OFXBuilder {
 
         InvestmentPositionList investmentPositionList = new InvestmentPositionList();
         for (SecurityPrice securityPrice : _securityPrices) {
-            PositionStock positionStock = buildPositionStock(securityPrice.getSymbol(), securityPrice.getPrice());
-            investmentPositionList.getPOSMFOrPOSSTOCKOrPOSDEBT().add(positionStock);
+            PositionMutualFund positionMutualFund = buildPositionMutualFund(securityPrice.getSymbol(),
+                    securityPrice.getCurrency(),
+                    securityPrice.getPrice());
+            investmentPositionList.getPOSMFOrPOSSTOCKOrPOSDEBT().add(positionMutualFund);
         }
         investmentStmtResponse.setINVPOSLIST(investmentPositionList);
 
@@ -49,10 +53,11 @@ public class OFXBuilder {
         SecurityList securityList = new SecurityList();
 
         for (SecurityPrice securityPrice : _securityPrices) {
-            StockInfo stockInfo = buildStockInfo(securityPrice.getSymbol(),
-                                                 securityPrice.getSecurityName(),
-                                                 securityPrice.getPrice());
-            securityList.getMFINFOOrSTOCKINFOOrOPTINFO().add(stockInfo);
+            MutualFundInfo mutualFundInfo = buildMutualFundInfo(securityPrice.getSymbol(),
+                    securityPrice.getSecurityName(),
+                    securityPrice.getCurrency(),
+                    securityPrice.getPrice());
+            securityList.getMFINFOOrSTOCKINFOOrOPTINFO().add(mutualFundInfo);
         }
 
         securityListResponseMessageSetV1.setSECLIST(securityList);
@@ -80,7 +85,28 @@ public class OFXBuilder {
         return stockInfo;
     }
 
-    private PositionStock buildPositionStock(String symbol, String price) {
+    private MutualFundInfo buildMutualFundInfo(String symbol, String securityName, String ccy, String price) {
+        MutualFundInfo mutualFundInfo = new MutualFundInfo();
+        mutualFundInfo.setMFTYPE(MutualFundTypeEnum.OPENEND);
+        GeneralSecurityInfo securityInfo = new GeneralSecurityInfo();
+        SecurityId securityId = new SecurityId();
+        securityId.setUNIQUEID(symbol);
+        securityId.setUNIQUEIDTYPE("TICKER");
+        securityInfo.setSECID(securityId);
+        securityInfo.setSECNAME(securityName);
+        securityInfo.setTICKER(symbol);
+        securityInfo.setUNITPRICE(price);
+        securityInfo.setDTASOF(getDate());
+        securityInfo.setMEMO("Price as of date based on closing price");
+        Currency currency = new Currency();
+        currency.setCURSYM(CurrencyEnum.fromValue(ccy));
+        currency.setCURRATE("1.00");
+        securityInfo.setCURRENCY(currency);
+        mutualFundInfo.setSECINFO(securityInfo);
+        return mutualFundInfo;
+    }
+
+    private PositionMutualFund buildPositionMutualFund(String symbol, String ccy, String price) {
         InvestmentPosition investmentPosition = new InvestmentPosition();
         SecurityId securityId = new SecurityId();
         securityId.setUNIQUEID(symbol);
@@ -93,9 +119,16 @@ public class OFXBuilder {
         investmentPosition.setMKTVAL("0.00");
         investmentPosition.setDTPRICEASOF(getDate());
         investmentPosition.setMEMO("Price as of date based on closing price");
-        PositionStock positionStock = new PositionStock();
-        positionStock.setINVPOS(investmentPosition);
-        return positionStock;
+        Currency currency = new Currency();
+        currency.setCURSYM(CurrencyEnum.fromValue(ccy));
+        currency.setCURRATE("1.00");
+        investmentPosition.setCURRENCY(currency);
+        PositionMutualFund positionMutualFund = new PositionMutualFund();
+        positionMutualFund.setINVPOS(investmentPosition);
+        positionMutualFund.setREINVDIV(BooleanType.Y);
+        positionMutualFund.setREINVCG(BooleanType.Y);
+
+        return positionMutualFund;
     }
 
     private SignonResponseMessageSetV1 getSignonResponseMessageSetV1() {
@@ -104,7 +137,7 @@ public class OFXBuilder {
         Status status = new Status();
         status.setCODE("0");
         status.setSEVERITY(SeverityEnum.INFO);
-        status.setMESSAGE("Sucessful Sign On");
+        status.setMESSAGE("Successful Sign On");
         signonResponse.setSTATUS(status);
         signonResponse.setDTSERVER(getDate());
         signonResponse.setLANGUAGE("ENG");

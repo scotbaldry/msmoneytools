@@ -77,7 +77,7 @@ public class FidelityHoldingsCSVParser {
             SecurityPrice securityPrice;
             String[] columns = _prices.get(s);
 
-            securityPrice = new SecurityPrice(columns[1],       // Symbol
+            securityPrice = new SecurityPrice(columns[0],       // Symbol
                                               columns[1],       // Security Name
                                               columns[3],       // Price
                                               columns[7],       // Currency

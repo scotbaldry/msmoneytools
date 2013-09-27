@@ -6,7 +6,9 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.UUID;
@@ -25,13 +27,16 @@ public class App {
     }
 
     public void run() throws IOException {
-        FidelityHoldingsCSVParser parser = new FidelityHoldingsCSVParser("/Users/scot/Downloads/AllHoldings.csv");
+        MapperParser mapperParser = new MapperParser("c:/develop/fidelity_mappings.csv");
+        FidelityHoldingsCSVParser parser = new FidelityHoldingsCSVParser("c:/users/scot baldry/downloads/fidelity2holdings.csv");
         parser.parse();
-        OFXBuilder ofxBuilder = new OFXBuilder(parser.getSecurityPrices());
-        marshallXML(ofxBuilder.buildOFX());
+        OFXBuilder ofxBuilder = new OFXBuilder(parser.getSecurityPrices(), mapperParser);
+
+        FileOutputStream fileOutputStream = new FileOutputStream("c:/develop/fidelity2holdings.ofx");
+        marshallXML(ofxBuilder.buildOFX(), fileOutputStream);
     }
 
-    private void marshallXML(OFX ofx) {
+    private void marshallXML(OFX ofx, OutputStream out) {
         try {
             JAXBContext context = JAXBContext.newInstance(OFX.class);
             Marshaller jaxbMarshaller = context.createMarshaller();
@@ -41,7 +46,7 @@ public class App {
 
             ObjectFactory objectFactory = new ObjectFactory();
             JAXBElement<OFX> ofxElement = objectFactory.createOFX(ofx);
-            jaxbMarshaller.marshal(ofxElement, System.out);
+            jaxbMarshaller.marshal(ofxElement, out);
 
         } catch (JAXBException e) {
             e.printStackTrace();
