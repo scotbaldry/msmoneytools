@@ -1,24 +1,48 @@
-package com.scotbaldry;
+package com.scotbaldry.msmoneytools;
 
-
-import com.scotbaldry.ofxschema.*;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
+import com.scotbaldry.ofxschema.BooleanType;
+import com.scotbaldry.ofxschema.Currency;
+import com.scotbaldry.ofxschema.CurrencyEnum;
+import com.scotbaldry.ofxschema.GeneralSecurityInfo;
+import com.scotbaldry.ofxschema.InvestmentAccount;
+import com.scotbaldry.ofxschema.InvestmentPosition;
+import com.scotbaldry.ofxschema.InvestmentPositionList;
+import com.scotbaldry.ofxschema.InvestmentStatementResponse;
+import com.scotbaldry.ofxschema.InvestmentStatementResponseMessageSetV1;
+import com.scotbaldry.ofxschema.InvestmentStatementTransactionResponse;
+import com.scotbaldry.ofxschema.MutualFundInfo;
+import com.scotbaldry.ofxschema.MutualFundTypeEnum;
+import com.scotbaldry.ofxschema.OFX;
+import com.scotbaldry.ofxschema.PositionMutualFund;
+import com.scotbaldry.ofxschema.PositionTypeEnum;
+import com.scotbaldry.ofxschema.SecurityId;
+import com.scotbaldry.ofxschema.SecurityList;
+import com.scotbaldry.ofxschema.SecurityListResponseMessageSetV1;
+import com.scotbaldry.ofxschema.SeverityEnum;
+import com.scotbaldry.ofxschema.SignonResponse;
+import com.scotbaldry.ofxschema.SignonResponseMessageSetV1;
+import com.scotbaldry.ofxschema.Status;
+import com.scotbaldry.ofxschema.SubAccountEnum;
+
 public class OFXBuilder {
+    private Date _valuationDate;
     private List<SecurityPrice> _securityPrices;
 
-    public OFXBuilder(List<SecurityPrice> securityPrices) {
+    public OFXBuilder(Date valuationDate, List<SecurityPrice> securityPrices) {
+        _valuationDate = valuationDate;
         _securityPrices = securityPrices;
     }
 
     public OFX buildOFX() {
         OFX ofx = new OFX();
 
-        SignonResponseMessageSetV1 signOnResponseMsgSet = getSignonResponseMessageSetV1();
+        SignonResponseMessageSetV1 signOnResponseMsgSet = getSignonResponseMessageSetV1(_valuationDate);
 
         InvestmentStatementResponseMessageSetV1 investmentStmtResponseMsgSet = new InvestmentStatementResponseMessageSetV1();
         InvestmentStatementTransactionResponse investmentStmtTxnResponse = new InvestmentStatementTransactionResponse();
@@ -29,7 +53,7 @@ public class OFXBuilder {
         investmentStmtTxnResponse.setSTATUS(status1);
 
         InvestmentStatementResponse investmentStmtResponse = new InvestmentStatementResponse();
-        investmentStmtResponse.setDTASOF(getDate());
+        investmentStmtResponse.setDTASOF(formatDate(_valuationDate));
         investmentStmtResponse.setCURDEF(CurrencyEnum.GBP);
         InvestmentAccount investmentAccount = new InvestmentAccount();
         investmentAccount.setBROKERID("fake.com");
@@ -41,8 +65,9 @@ public class OFXBuilder {
         InvestmentPositionList investmentPositionList = new InvestmentPositionList();
         for (SecurityPrice securityPrice : _securityPrices) {
             PositionMutualFund positionMutualFund = buildPositionMutualFund(securityPrice.getSymbol(),
-                    securityPrice.getCurrency(),
-                    securityPrice.getPrice());
+                                                                            securityPrice.getCurrency(),
+                                                                            securityPrice.getPrice(),
+                                                                            securityPrice.getDate());
             investmentPositionList.getPOSMFOrPOSSTOCKOrPOSDEBT().add(positionMutualFund);
         }
         investmentStmtResponse.setINVPOSLIST(investmentPositionList);
@@ -52,9 +77,10 @@ public class OFXBuilder {
 
         for (SecurityPrice securityPrice : _securityPrices) {
             MutualFundInfo mutualFundInfo = buildMutualFundInfo(securityPrice.getSymbol(),
-                    securityPrice.getSecurityName(),
-                    securityPrice.getCurrency(),
-                    securityPrice.getPrice());
+                                                                securityPrice.getSecurityName(),
+                                                                securityPrice.getCurrency(),
+                                                                securityPrice.getPrice(),
+                                                                securityPrice.getDate());
             securityList.getMFINFOOrSTOCKINFOOrOPTINFO().add(mutualFundInfo);
         }
 
@@ -67,23 +93,7 @@ public class OFXBuilder {
         return ofx;
     }
 
-    private StockInfo buildStockInfo(String symbol, String securityName, String price) {
-        StockInfo stockInfo = new StockInfo();
-        GeneralSecurityInfo securityInfo = new GeneralSecurityInfo();
-        SecurityId securityId = new SecurityId();
-        securityId.setUNIQUEID(symbol);
-        securityId.setUNIQUEIDTYPE("TICKER");
-        securityInfo.setSECID(securityId);
-        securityInfo.setSECNAME(securityName);
-        securityInfo.setTICKER(symbol);
-        securityInfo.setUNITPRICE(price);
-        securityInfo.setDTASOF(getDate());
-        securityInfo.setMEMO("Price as of date based on closing price");
-        stockInfo.setSECINFO(securityInfo);
-        return stockInfo;
-    }
-
-    private MutualFundInfo buildMutualFundInfo(String symbol, String securityName, String ccy, String price) {
+    private MutualFundInfo buildMutualFundInfo(String symbol, String securityName, String ccy, String price, Date date) {
         MutualFundInfo mutualFundInfo = new MutualFundInfo();
         mutualFundInfo.setMFTYPE(MutualFundTypeEnum.OPENEND);
         GeneralSecurityInfo securityInfo = new GeneralSecurityInfo();
@@ -94,7 +104,7 @@ public class OFXBuilder {
         securityInfo.setSECNAME(securityName);
         securityInfo.setTICKER(symbol);
         securityInfo.setUNITPRICE(price);
-        securityInfo.setDTASOF(getDate());
+        securityInfo.setDTASOF(formatDate(date));
         securityInfo.setMEMO("Price as of date based on closing price");
         Currency currency = new Currency();
         currency.setCURSYM(CurrencyEnum.fromValue(ccy));
@@ -104,7 +114,7 @@ public class OFXBuilder {
         return mutualFundInfo;
     }
 
-    private PositionMutualFund buildPositionMutualFund(String symbol, String ccy, String price) {
+    private PositionMutualFund buildPositionMutualFund(String symbol, String ccy, String price, Date date) {
         InvestmentPosition investmentPosition = new InvestmentPosition();
         SecurityId securityId = new SecurityId();
         securityId.setUNIQUEID(symbol);
@@ -112,10 +122,10 @@ public class OFXBuilder {
         investmentPosition.setSECID(securityId);
         investmentPosition.setHELDINACCT(SubAccountEnum.OTHER);
         investmentPosition.setPOSTYPE(PositionTypeEnum.LONG);
-        investmentPosition.setUNITS("0");
+        investmentPosition.setUNITS("1.00");
         investmentPosition.setUNITPRICE(price);
         investmentPosition.setMKTVAL("0.00");
-        investmentPosition.setDTPRICEASOF(getDate());
+        investmentPosition.setDTPRICEASOF(formatDate(date));
         investmentPosition.setMEMO("Price as of date based on closing price");
         Currency currency = new Currency();
         currency.setCURSYM(CurrencyEnum.fromValue(ccy));
@@ -129,7 +139,7 @@ public class OFXBuilder {
         return positionMutualFund;
     }
 
-    private SignonResponseMessageSetV1 getSignonResponseMessageSetV1() {
+    private SignonResponseMessageSetV1 getSignonResponseMessageSetV1(Date date) {
         SignonResponseMessageSetV1 signOnResponseMsgSet = new SignonResponseMessageSetV1();
         SignonResponse signonResponse = new SignonResponse();
         Status status = new Status();
@@ -137,7 +147,7 @@ public class OFXBuilder {
         status.setSEVERITY(SeverityEnum.INFO);
         status.setMESSAGE("Successful Sign On");
         signonResponse.setSTATUS(status);
-        signonResponse.setDTSERVER(getDate());
+        signonResponse.setDTSERVER(formatDate(date));
         signonResponse.setLANGUAGE("ENG");
         signOnResponseMsgSet.setSONRS(signonResponse);
         return signOnResponseMsgSet;
@@ -151,5 +161,10 @@ public class OFXBuilder {
         Date date = new Date(System.currentTimeMillis());
         SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyyMMddHHmmss");
         return dateFormatter.format(date);
+    }
+
+    private String formatDate(Date date) {
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMdd");
+        return formatter.format(date);
     }
 }

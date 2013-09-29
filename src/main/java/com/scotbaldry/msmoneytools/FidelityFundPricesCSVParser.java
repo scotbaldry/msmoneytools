@@ -1,4 +1,4 @@
-package com.scotbaldry;
+package com.scotbaldry.msmoneytools;
 
 import java.io.*;
 import java.util.HashMap;

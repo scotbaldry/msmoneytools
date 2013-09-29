@@ -1,14 +1,16 @@
-package com.scotbaldry;
+package com.scotbaldry.msmoneytools;
+
+import java.util.Date;
 
 public class SecurityPrice {
     private String _symbol;
     private String _securityName;
     private String _price;
     private String _currency;
-    private String _date;
+    private Date _date;
     private String _memo;
 
-    public SecurityPrice(String symbol, String securityName, String price, String currency, String date, String memo) {
+    public SecurityPrice(String symbol, String securityName, String price, String currency, Date date, String memo) {
         _symbol = symbol;
         _securityName = securityName;
         _price = price;
@@ -29,7 +31,7 @@ public class SecurityPrice {
         return _price;
     }
 
-    public String getDate() {
+    public Date getDate() {
         return _date;
     }
 

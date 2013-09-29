@@ -1,4 +1,4 @@
-package com.scotbaldry;
+package com.scotbaldry.msmoneytools;
 
 import junit.framework.Test;
 import junit.framework.TestCase;

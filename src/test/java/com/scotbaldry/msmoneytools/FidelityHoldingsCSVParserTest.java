@@ -1,11 +1,9 @@
-package com.scotbaldry;
+package com.scotbaldry.msmoneytools;
 
 
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
-
-import java.io.IOException;
 
 public class FidelityHoldingsCSVParserTest extends TestCase {
     /**
@@ -24,7 +22,7 @@ public class FidelityHoldingsCSVParserTest extends TestCase {
         return new TestSuite(FidelityHoldingsCSVParserTest.class);
     }
 
-    public void testParseValidFile() throws IOException {
+    public void testParseValidFile() throws Exception {
         FidelityHoldingsCSVParser fidelityCSVParser = new FidelityHoldingsCSVParser("/Users/scot/Downloads/AllHoldings.csv", null); //todo
         fidelityCSVParser.parse();
         assertEquals("Check number of rows is correct", 26, fidelityCSVParser.getRowCount());
@@ -34,7 +32,7 @@ public class FidelityHoldingsCSVParserTest extends TestCase {
         FidelityHoldingsCSVParser fidelityCSVParser = new FidelityHoldingsCSVParser("/Users/scot/Downloads/data.csv", null); //todo
         try {
             fidelityCSVParser.parse();
-        } catch (IOException e) {
+        } catch (Exception e) {
             assertTrue("Check that Exception thrown if trying to parse incorrect file format", true);
         }
     }
