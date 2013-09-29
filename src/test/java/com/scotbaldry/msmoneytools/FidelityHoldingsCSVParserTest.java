@@ -2,12 +2,14 @@ package com.scotbaldry.msmoneytools;
 
 
 import java.net.URL;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
+import org.apache.commons.lang.time.DateUtils;
 
 public class FidelityHoldingsCSVParserTest extends TestCase {
     /**
@@ -31,7 +33,9 @@ public class FidelityHoldingsCSVParserTest extends TestCase {
         FidelityHoldingsCSVParser parser = new FidelityHoldingsCSVParser(holdingsFilename.getFile(), null); //todo
         parser.parse();
         assertEquals("Check number of rows is correct", 2, parser.getRowCount());
-        assertEquals("Check valuation date is correct", new GregorianCalendar(2013, 9, 26).getTime(), parser.getValuationDate());
+
+        Date refDate = new GregorianCalendar(2013, Calendar.SEPTEMBER, 26).getTime();
+        assertTrue("Check valuation date is correct", DateUtils.isSameDay(refDate, parser.getValuationDate()));
     }
 
     public void testParseInvalidFile() {

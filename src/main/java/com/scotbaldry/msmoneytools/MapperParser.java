@@ -17,7 +17,7 @@ public class MapperParser {
         _csvFile = new File(csvFilename);
     }
 
-    public void parse() {
+    public void parse() throws Exception {
         String line = "";
         String cvsSplitBy = ",";
         int row = 0;
@@ -41,9 +41,6 @@ public class MapperParser {
 
                 row++;
             }
-
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 

@@ -27,10 +27,10 @@ public class FidelityFundPricesCSVParserTest extends TestCase {
         URL fundPricesFilename = ClassLoader.getSystemResource("fidelity_fund_prices.csv");
         FidelityFundPricesCSVParser fidelityCSVParser = new FidelityFundPricesCSVParser(fundPricesFilename.getFile());
         fidelityCSVParser.parse();
-        assertEquals("Check number of rows is correct", 96, fidelityCSVParser.getRowCount());
+        assertEquals("Check number of rows is correct", 230, fidelityCSVParser.getRowCount());
     }
 
     public void testParseInvalidFile() {
-        //TODO: complete this
+        //TODO: add test here for invalid file
     }
 }
