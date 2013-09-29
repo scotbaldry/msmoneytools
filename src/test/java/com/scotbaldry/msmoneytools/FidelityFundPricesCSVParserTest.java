@@ -1,5 +1,7 @@
 package com.scotbaldry.msmoneytools;
 
+import java.net.URL;
+
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
@@ -22,7 +24,8 @@ public class FidelityFundPricesCSVParserTest extends TestCase {
     }
 
     public void testParseValidFile() {
-        FidelityFundPricesCSVParser fidelityCSVParser = new FidelityFundPricesCSVParser("/Users/scot/Downloads/data.csv");
+        URL fundPricesFilename = ClassLoader.getSystemResource("fidelity_fund_prices.csv");
+        FidelityFundPricesCSVParser fidelityCSVParser = new FidelityFundPricesCSVParser(fundPricesFilename.getFile());
         fidelityCSVParser.parse();
         assertEquals("Check number of rows is correct", 96, fidelityCSVParser.getRowCount());
     }

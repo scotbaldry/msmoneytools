@@ -1,6 +1,10 @@
 package com.scotbaldry.msmoneytools;
 
 
+import java.net.URL;
+import java.util.Date;
+import java.util.GregorianCalendar;
+
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
@@ -23,13 +27,16 @@ public class FidelityHoldingsCSVParserTest extends TestCase {
     }
 
     public void testParseValidFile() throws Exception {
-        FidelityHoldingsCSVParser fidelityCSVParser = new FidelityHoldingsCSVParser("/Users/scot/Downloads/AllHoldings.csv", null); //todo
-        fidelityCSVParser.parse();
-        assertEquals("Check number of rows is correct", 26, fidelityCSVParser.getRowCount());
+        URL holdingsFilename = ClassLoader.getSystemResource("fidelity_holdings.csv");
+        FidelityHoldingsCSVParser parser = new FidelityHoldingsCSVParser(holdingsFilename.getFile(), null); //todo
+        parser.parse();
+        assertEquals("Check number of rows is correct", 2, parser.getRowCount());
+        assertEquals("Check valuation date is correct", new GregorianCalendar(2013, 9, 26).getTime(), parser.getValuationDate());
     }
 
     public void testParseInvalidFile() {
-        FidelityHoldingsCSVParser fidelityCSVParser = new FidelityHoldingsCSVParser("/Users/scot/Downloads/data.csv", null); //todo
+        URL holdingsFilename = ClassLoader.getSystemResource("fidelity_holdings.csv");
+        FidelityHoldingsCSVParser fidelityCSVParser = new FidelityHoldingsCSVParser(holdingsFilename.getFile(), null); //todo
         try {
             fidelityCSVParser.parse();
         } catch (Exception e) {
