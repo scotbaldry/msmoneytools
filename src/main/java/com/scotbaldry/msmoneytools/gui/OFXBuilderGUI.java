@@ -80,31 +80,31 @@ public class OFXBuilderGUI extends JFrame {
 
     private void buildButtonPanel() {
         JPanel buttonPanel = new JPanel();
-        JButton exitButton = new JButton();
-        JButton runButton = new JButton();
+        JButton openOFX = new JButton();
+        JButton saveOFX = new JButton();
 
-        runButton.setAction(new AbstractAction() {
-            public void actionPerformed(ActionEvent e) {
-                startBusySafely();
-                clear();
-                //Thread t = new Thread(new CleanupRunnable(OFXBuilderGUI.this));
-                //t.setDaemon(true);
-                //t.run();
-            }
-        });
+//        runButton.setAction(new AbstractAction() {
+//            public void actionPerformed(ActionEvent e) {
+//                startBusySafely();
+//                clear();
+//                //Thread t = new Thread(new CleanupRunnable(OFXBuilderGUI.this));
+//                //t.setDaemon(true);
+//                //t.run();
+//            }
+//        });
 
-        exitButton.setAction(new AbstractAction() {
-            public void actionPerformed(ActionEvent e) {
-                System.exit(0);
-            }
-        });
+//        exitButton.setAction(new AbstractAction() {
+//            public void actionPerformed(ActionEvent e) {
+//                System.exit(0);
+//            }
+//        });
 
-        runButton.setText("Cleanup");
-        exitButton.setText("Exit");
+        openOFX.setText("Import to MSMoney");
+        saveOFX.setText("Save OFX File");
 
         buttonPanel.setLayout(new FlowLayout());
-        buttonPanel.add(exitButton);
-        buttonPanel.add(runButton);
+        buttonPanel.add(openOFX);
+        buttonPanel.add(saveOFX);
         this.getContentPane().add(buttonPanel, BorderLayout.SOUTH);
     }
 
