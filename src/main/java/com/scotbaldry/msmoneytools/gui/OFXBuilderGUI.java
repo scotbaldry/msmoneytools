@@ -5,7 +5,7 @@ import com.jhlabs.awt.ParagraphLayout;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
-import java.io.IOException;
+import java.io.File;
 
 public class OFXBuilderGUI extends JFrame {
     JTextArea m_outputArea = new JTextArea(20, 100);
@@ -35,25 +35,46 @@ public class OFXBuilderGUI extends JFrame {
     }
 
     private void buildDirPanel() {
-        JPanel dirPanel = new JPanel();
+        final JPanel dirPanel = new JPanel();
         dirPanel.setLayout(new ParagraphLayout());
-        JLabel zenLabel = new JLabel("Zen Media Directory : ");
-        JLabel iphoneLabel = new JLabel("iPhone Media Directory : ");
-        JLabel mediaLabel = new JLabel("Media Directory : ");
-        JTextField zenDir = new JTextField(30);
-        JTextField iphoneDir = new JTextField(30);
-        JTextField mediaDir = new JTextField(30);
+        final JLabel fidelityHoldingsLabel = new JLabel("Fidelity Holdings File : ");
+        final JLabel mappingsLabel = new JLabel("Fund Mappings File : ");
+        final JTextField fidelityHoldingsFile = new JTextField(30);
+        final JTextField mappingsFile = new JTextField(30);
+        final JButton holdingsOpenDialogButton = new JButton(new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                JFileChooser fc = new JFileChooser();
+                int returnVal = fc.showOpenDialog(dirPanel);
 
-        zenDir.setEditable(false);
-        iphoneDir.setEditable(false);
-        mediaDir.setEditable(false);
+                if (returnVal == JFileChooser.APPROVE_OPTION) {
+                    File file = fc.getSelectedFile();
+                    fidelityHoldingsFile.setText(file.getName());
+                }
+            }
+        });
+        holdingsOpenDialogButton.setText("...");
 
-        dirPanel.add(zenLabel, ParagraphLayout.NEW_PARAGRAPH);
-        dirPanel.add(zenDir);
-        dirPanel.add(iphoneLabel, ParagraphLayout.NEW_PARAGRAPH);
-        dirPanel.add(iphoneDir);
-        dirPanel.add(mediaLabel, ParagraphLayout.NEW_PARAGRAPH);
-        dirPanel.add(mediaDir);
+        JButton mappingsOpenDialogButton = new JButton(new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                JFileChooser fc = new JFileChooser();
+                int returnVal = fc.showOpenDialog(dirPanel);
+
+                if (returnVal == JFileChooser.APPROVE_OPTION) {
+                    File file = fc.getSelectedFile();
+                    mappingsFile.setText(file.getName());
+                }
+            }
+        });
+        mappingsOpenDialogButton.setText("...");
+
+        dirPanel.add(fidelityHoldingsLabel, ParagraphLayout.NEW_PARAGRAPH);
+        dirPanel.add(fidelityHoldingsFile);
+        dirPanel.add(holdingsOpenDialogButton);
+        dirPanel.add(mappingsLabel, ParagraphLayout.NEW_PARAGRAPH);
+        dirPanel.add(mappingsFile);
+        dirPanel.add(mappingsOpenDialogButton);
         this.getContentPane().add(dirPanel, BorderLayout.NORTH);
     }
 
