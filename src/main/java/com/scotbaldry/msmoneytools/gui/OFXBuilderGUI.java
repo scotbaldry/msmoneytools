@@ -1,16 +1,18 @@
 package com.scotbaldry.msmoneytools.gui;
 
 import com.jhlabs.awt.ParagraphLayout;
+import com.scotbaldry.msmoneytools.FidelityFundPricesCSVParser;
+import com.scotbaldry.msmoneytools.MapperParser;
 
 import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.io.File;
 
 public class OFXBuilderGUI extends JFrame {
-    JTextArea m_outputArea = new JTextArea(20, 100);
 
-    public OFXBuilderGUI(String title) throws HeadlessException {
+    public OFXBuilderGUI(String title) {
         super(title);
 
         setLayout(new BorderLayout());
@@ -26,11 +28,25 @@ public class OFXBuilderGUI extends JFrame {
 
     private void buildOutputPanel() {
         JPanel outputPanel = new JPanel();
+        JTabbedPane tabbedPane = new JTabbedPane();
 
-        outputPanel.setBorder(BorderFactory.createTitledBorder("Output"));
-        outputPanel.setLayout(new BorderLayout());
-        JScrollPane areaScrollPane = new JScrollPane(m_outputArea);
-        outputPanel.add(areaScrollPane, BorderLayout.CENTER);
+        JPanel tab1 = new JPanel();
+        DefaultTableModel tableModel1 = new DefaultTableModel(new Object[][]{}, FidelityFundPricesCSVParser.getColumns());
+        JTable table1 = new JTable(tableModel1);
+        table1.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+        JScrollPane scrollPane1 = new JScrollPane(table1, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        tab1.add(scrollPane1);
+        tabbedPane.addTab("Fidelity Holdings", tab1);
+
+        JPanel tab2 = new JPanel();
+        DefaultTableModel tableModel2 = new DefaultTableModel(new Object[][]{}, MapperParser.getColumns());
+        JTable table2 = new JTable(tableModel2);
+        table2.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+        JScrollPane scrollPane2 = new JScrollPane(table2, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        tab2.add(scrollPane2);
+        tabbedPane.addTab("Fund Mappings", tab2);
+
+        outputPanel.add(tabbedPane);
         this.getContentPane().add(outputPanel, BorderLayout.CENTER);
     }
 
@@ -64,6 +80,11 @@ public class OFXBuilderGUI extends JFrame {
                 if (returnVal == JFileChooser.APPROVE_OPTION) {
                     File file = fc.getSelectedFile();
                     mappingsFile.setText(file.getName());
+                    startBusySafely();
+                    ParseMappingsRunnable runnable = new ParseMappingsRunnable(file.getName());
+                    runSafelyAsync(runnable);
+                    //TODO need access to the table model
+                    runnable.getParser().getData();
                 }
             }
         });
@@ -83,47 +104,14 @@ public class OFXBuilderGUI extends JFrame {
         JButton openOFX = new JButton();
         JButton saveOFX = new JButton();
 
-//        runButton.setAction(new AbstractAction() {
-//            public void actionPerformed(ActionEvent e) {
-//                startBusySafely();
-//                clear();
-//                //Thread t = new Thread(new CleanupRunnable(OFXBuilderGUI.this));
-//                //t.setDaemon(true);
-//                //t.run();
-//            }
-//        });
-
-//        exitButton.setAction(new AbstractAction() {
-//            public void actionPerformed(ActionEvent e) {
-//                System.exit(0);
-//            }
-//        });
-
         openOFX.setText("Import to MSMoney");
         saveOFX.setText("Save OFX File");
 
-        buttonPanel.setLayout(new FlowLayout());
+        FlowLayout flowLayout = new FlowLayout(FlowLayout.RIGHT);
+        buttonPanel.setLayout(flowLayout);
         buttonPanel.add(openOFX);
         buttonPanel.add(saveOFX);
         this.getContentPane().add(buttonPanel, BorderLayout.SOUTH);
-    }
-
-    public void output(final String s) {
-        runSafelyAsync(new Runnable() {
-            public void run() {
-                m_outputArea.append(s + "\n");
-                invalidate();
-            }
-        });
-    }
-
-    public void clear() {
-        runSafelyAsync(new Runnable() {
-            public void run() {
-                m_outputArea.setText("");
-                invalidate();
-            }
-        });
     }
 
     private void runSafelyAsync(Runnable r) {
@@ -172,19 +160,28 @@ public class OFXBuilderGUI extends JFrame {
         runSafelyAsync(r);
     }
 
-    /**
-     * Runnable to handle asych execution of CleanupController.
-     */
-    private class CleanupRunnable implements Runnable {
+    private class ParseMappingsRunnable implements Runnable {
+        private String _filename;
+        private MapperParser _parser;
+
+        public ParseMappingsRunnable(String filename) {
+            _filename = filename;
+        }
+
+        public MapperParser getParser() {
+            return _parser;
+        }
+
+        @Override
         public void run() {
-//                TVCleanup cleanupController = new TVCleanup();
-//                try {
-//                    cleanupController.run(m_outputConsole);
-//                    endBusySafely(null);
-//                }
-//                catch (IOException e) {
-//                    e.printStackTrace();
-//                }
+            _parser = new MapperParser(_filename);
+            try {
+                _parser.parse();
+                endBusySafely(null);
+            } catch (Exception e) {
+                //TODO - dialog?
+                e.printStackTrace();
+            }
         }
     }
 

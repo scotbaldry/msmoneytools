@@ -11,12 +11,16 @@ import java.util.Map;
  *
  */
 public class FidelityFundPricesCSVParser {
-    private String[] _headerFormat = {"Fund Name", "Inc/Acc", "Updated", "Buy", "Sell", "Change", "Currency", "Yield%", "Ex Div"};
+    private static String[] _headerFormat = {"Fund Name", "Inc/Acc", "Updated", "Buy", "Sell", "Change", "Currency", "Yield%", "Ex Div"};
     private File _csvFile;
     private Map<String, String[]> _prices = new HashMap<>();
 
     public FidelityFundPricesCSVParser(String csvFilename) {
         _csvFile = new File(csvFilename);
+    }
+
+    public static String[] getColumns() {
+        return _headerFormat;
     }
 
     public void parse() {

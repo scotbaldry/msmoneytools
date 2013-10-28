@@ -16,7 +16,7 @@ import java.util.Map;
  * Class that is able to parse the CSV files produced by the Holdings & Transactions link within the Fidelity My Accounts page
  */
 public class FidelityHoldingsCSVParser {
-    private String[] _headerFormat = {"Provider", "Holding", "Income status", "Price per unit", "Date", "Units", "Holding valuation", "Holding currency code", "Reporting valuation", "Reporting currency code"};
+    private static String[] _headerFormat = {"Provider", "Holding", "Income status", "Price per unit", "Date", "Units", "Holding valuation", "Holding currency code", "Reporting valuation", "Reporting currency code"};
     private File _csvFile;
     private MapperParser _mapper;
     private Date _valuationDate;
@@ -25,6 +25,10 @@ public class FidelityHoldingsCSVParser {
     public FidelityHoldingsCSVParser(String csvFilename, MapperParser mapper) {
         _csvFile = new File(csvFilename);
         _mapper = mapper;
+    }
+
+    public static String[] getColumns() {
+        return _headerFormat;
     }
 
     public void parse() throws IOException, ParseException {
