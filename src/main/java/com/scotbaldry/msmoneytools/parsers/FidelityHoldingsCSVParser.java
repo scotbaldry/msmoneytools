@@ -20,7 +20,7 @@ import java.util.Map;
  */
 public class FidelityHoldingsCSVParser implements IParser {
     private static String[] _headerFormat = {"Provider", "Holding", "Income status", "Price per unit", "Date", "Units", "Holding valuation", "Holding currency code", "Reporting valuation", "Reporting currency code"};
-    private static String[] _columns = {"", "", "", "", ""};
+    private static String[] _columns = {"Symbol", "Security Name", "Price", "Currency", "Date"};
 
     private MapperParser _mapper;
     private Date _valuationDate;
@@ -31,7 +31,7 @@ public class FidelityHoldingsCSVParser implements IParser {
     }
 
     public String[] getColumns() {
-        return null;
+        return _columns;
     }
 
     public String[] getHeader() {

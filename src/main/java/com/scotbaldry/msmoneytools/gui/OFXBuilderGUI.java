@@ -79,6 +79,7 @@ public class OFXBuilderGUI extends JFrame {
                         _holdingsTableModel.setDataVector(_holdingParser.getData(),
                                 _holdingParser.getColumns());
                     } catch (ParseException e1) {
+                        e1.printStackTrace();
                         //todo: raise dialog here
                     }
                 }
