@@ -1,11 +1,13 @@
 package com.scotbaldry.msmoneytools;
 
 
+import java.io.File;
 import java.net.URL;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
+import com.scotbaldry.msmoneytools.parsers.FidelityHoldingsCSVParser;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
@@ -30,8 +32,8 @@ public class FidelityHoldingsCSVParserTest extends TestCase {
 
     public void testParseValidFile() throws Exception {
         URL holdingsFilename = ClassLoader.getSystemResource("fidelity_holdings.csv");
-        FidelityHoldingsCSVParser parser = new FidelityHoldingsCSVParser(holdingsFilename.getFile(), null); //todo
-        parser.parse();
+        FidelityHoldingsCSVParser parser = new FidelityHoldingsCSVParser(null); //todo
+        parser.parse(new File(holdingsFilename.getFile()));
         assertEquals("Check number of rows is correct", 2, parser.getRowCount());
 
         Date refDate = new GregorianCalendar(2013, Calendar.SEPTEMBER, 26).getTime();
@@ -40,9 +42,9 @@ public class FidelityHoldingsCSVParserTest extends TestCase {
 
     public void testParseInvalidFile() {
         URL holdingsFilename = ClassLoader.getSystemResource("fidelity_holdings.csv");
-        FidelityHoldingsCSVParser fidelityCSVParser = new FidelityHoldingsCSVParser(holdingsFilename.getFile(), null); //todo
+        FidelityHoldingsCSVParser fidelityCSVParser = new FidelityHoldingsCSVParser(null); //todo
         try {
-            fidelityCSVParser.parse();
+            fidelityCSVParser.parse(new File(holdingsFilename.getFile()));
         } catch (Exception e) {
             assertTrue("Check that Exception thrown if trying to parse incorrect file format", true);
         }

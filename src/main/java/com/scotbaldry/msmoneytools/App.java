@@ -1,5 +1,7 @@
 package com.scotbaldry.msmoneytools;
 
+import com.scotbaldry.msmoneytools.parsers.FidelityHoldingsCSVParser;
+import com.scotbaldry.msmoneytools.parsers.MapperParser;
 import com.scotbaldry.ofxschema.OFX;
 import com.scotbaldry.ofxschema.ObjectFactory;
 import org.w3c.dom.Document;
@@ -17,10 +19,7 @@ import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
-import java.io.FileOutputStream;
-import java.io.OutputStream;
-import java.io.StringReader;
-import java.io.StringWriter;
+import java.io.*;
 
 public class App {
     public App() {
@@ -37,10 +36,10 @@ public class App {
     }
 
     public void run() throws Exception {
-        MapperParser mapperParser = new MapperParser("c:/develop/fidelity_mappings.csv");
-        mapperParser.parse();
-        FidelityHoldingsCSVParser parser = new FidelityHoldingsCSVParser("c:/users/scot baldry/downloads/fidelity2holdings.csv", mapperParser);
-        parser.parse();
+        MapperParser mapperParser = new MapperParser();
+        mapperParser.parse(new File("c:/develop/fidelity_mappings.csv"));
+        FidelityHoldingsCSVParser parser = new FidelityHoldingsCSVParser(mapperParser);
+        parser.parse(new File("c:/users/scot baldry/downloads/fidelity2holdings.csv"));
         OFXBuilder ofxBuilder = new OFXBuilder(parser.getValuationDate(), parser.getSecurityPrices());
 
         FileOutputStream fileOutputStream = new FileOutputStream("c:/develop/fidelity2holdings.ofx");

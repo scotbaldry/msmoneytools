@@ -1,7 +1,9 @@
 package com.scotbaldry.msmoneytools;
 
+import java.io.File;
 import java.net.URL;
 
+import com.scotbaldry.msmoneytools.parsers.FidelityFundPricesCSVParser;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
@@ -25,8 +27,8 @@ public class FidelityFundPricesCSVParserTest extends TestCase {
 
     public void testParseValidFile() {
         URL fundPricesFilename = ClassLoader.getSystemResource("fidelity_fund_prices.csv");
-        FidelityFundPricesCSVParser fidelityCSVParser = new FidelityFundPricesCSVParser(fundPricesFilename.getFile());
-        fidelityCSVParser.parse();
+        FidelityFundPricesCSVParser fidelityCSVParser = new FidelityFundPricesCSVParser();
+        fidelityCSVParser.parse(new File(fundPricesFilename.getFile()));
         assertEquals("Check number of rows is correct", 230, fidelityCSVParser.getRowCount());
     }
 

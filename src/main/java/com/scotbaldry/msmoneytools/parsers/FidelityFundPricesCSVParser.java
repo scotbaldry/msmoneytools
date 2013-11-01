@@ -1,4 +1,4 @@
-package com.scotbaldry.msmoneytools;
+package com.scotbaldry.msmoneytools.parsers;
 
 import java.io.*;
 import java.util.HashMap;
@@ -10,25 +10,28 @@ import java.util.Map;
  *  https://www.fidelity.co.uk/investor/funds/fund-prices/default.page
  *
  */
-public class FidelityFundPricesCSVParser {
+public class FidelityFundPricesCSVParser implements IParser {
     private static String[] _headerFormat = {"Fund Name", "Inc/Acc", "Updated", "Buy", "Sell", "Change", "Currency", "Yield%", "Ex Div"};
-    private File _csvFile;
+
     private Map<String, String[]> _prices = new HashMap<>();
 
-    public FidelityFundPricesCSVParser(String csvFilename) {
-        _csvFile = new File(csvFilename);
+    public FidelityFundPricesCSVParser() {
     }
 
-    public static String[] getColumns() {
+    public String[] getHeader() {
         return _headerFormat;
     }
 
-    public void parse() {
+    public String[] getColumns() {
+        return _headerFormat;
+    }
+
+    public void parse(File filename) {
         String line = "";
         String cvsSplitBy = ",";
         int row = 0;
 
-        try (BufferedReader br = new BufferedReader(new FileReader(_csvFile))) {
+        try (BufferedReader br = new BufferedReader(new FileReader(filename))) {
             while ((line = br.readLine()) != null) {
                 // use comma as separator
                 String[] columns = line.split(cvsSplitBy);
@@ -49,6 +52,11 @@ public class FidelityFundPricesCSVParser {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    @Override
+    public Object[][] getData() {
+        return null;
     }
 
     private boolean validateHeader(String[] columns) {

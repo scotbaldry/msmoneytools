@@ -1,4 +1,7 @@
-package com.scotbaldry.msmoneytools;
+package com.scotbaldry.msmoneytools.parsers;
+
+import com.scotbaldry.msmoneytools.SecurityPrice;
+import com.scotbaldry.msmoneytools.parsers.MapperParser;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -15,30 +18,34 @@ import java.util.Map;
 /**
  * Class that is able to parse the CSV files produced by the Holdings & Transactions link within the Fidelity My Accounts page
  */
-public class FidelityHoldingsCSVParser {
+public class FidelityHoldingsCSVParser implements IParser {
     private static String[] _headerFormat = {"Provider", "Holding", "Income status", "Price per unit", "Date", "Units", "Holding valuation", "Holding currency code", "Reporting valuation", "Reporting currency code"};
-    private File _csvFile;
+    private static String[] _columns = {"", "", "", "", ""};
+
     private MapperParser _mapper;
     private Date _valuationDate;
     private Map<String, String[]> _prices = new HashMap<>();
 
-    public FidelityHoldingsCSVParser(String csvFilename, MapperParser mapper) {
-        _csvFile = new File(csvFilename);
+    public FidelityHoldingsCSVParser(MapperParser mapper) {
         _mapper = mapper;
     }
 
-    public static String[] getColumns() {
+    public String[] getColumns() {
+        return null;
+    }
+
+    public String[] getHeader() {
         return _headerFormat;
     }
 
-    public void parse() throws IOException, ParseException {
+    public void parse(File filename) throws Exception {
         String line = "";
         String cvsSplitBy = ",";
         boolean processingBody = false;
         int headerRow = 0;
         int bodyRow = 0;
 
-        try (BufferedReader br = new BufferedReader(new FileReader(_csvFile))) {
+        try (BufferedReader br = new BufferedReader(new FileReader(filename))) {
             while ((line = br.readLine()) != null) {
                 // use comma as separator
                 String[] columns = line.split(cvsSplitBy);
@@ -69,6 +76,29 @@ public class FidelityHoldingsCSVParser {
                 bodyRow++;
             }
         }
+    }
+
+    /**
+     * Method to return all parsed data in a simple 2 dimensional array suitable for
+     * rendering in a table or similar data component.
+     *
+     * @return a 2 dimensional array of Objects (columns x rows)
+     */
+    public Object[][] getData() throws ParseException {
+        List<SecurityPrice> securityPrices = getSecurityPrices();
+        Object[][] data = new Object[securityPrices.size()][5];
+
+        int i = 0;
+        for (SecurityPrice price : securityPrices) {
+            data[i][0] = price.getSymbol();
+            data[i][1] = price.getSecurityName();
+            data[i][2] = price.getPrice();
+            data[i][3] = price.getCurrency();
+            data[i][4] = price.getDate();
+            i++;
+        }
+
+        return data;
     }
 
     public List<SecurityPrice> getSecurityPrices() throws ParseException {

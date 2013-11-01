@@ -1,4 +1,4 @@
-package com.scotbaldry.msmoneytools;
+package com.scotbaldry.msmoneytools.parsers;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -9,28 +9,31 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class MapperParser {
+public class MapperParser implements IParser {
     private static String[] _headerFormat = {"from symbol", "from security name", "to symbol", "to security name"};
-    private File _csvFile;
 
     private Map<String, SecurityMapDetails> _symbolIndex = new HashMap<>();
     private Map<String, SecurityMapDetails> _securityNameIndex = new HashMap<>();
     private List<SecurityMapDetails> _data = new ArrayList<>();
 
-    public MapperParser(String csvFilename) {
-        _csvFile = new File(csvFilename);
+    public MapperParser() {
     }
 
-    public static String[] getColumns() {
+    public String[] getColumns() {
         return _headerFormat;
     }
 
-    public void parse() throws Exception {
+    public String[] getHeader() {
+        return _headerFormat;
+    }
+
+    @Override
+    public void parse(File filename) throws Exception {
         String line = "";
         String cvsSplitBy = ",";
         int row = 0;
 
-        try (BufferedReader br = new BufferedReader(new FileReader(_csvFile))) {
+        try (BufferedReader br = new BufferedReader(new FileReader(filename))) {
             while ((line = br.readLine()) != null) {
                 // use comma as separator
                 String[] columns = line.split(cvsSplitBy);
@@ -67,6 +70,7 @@ public class MapperParser {
      *
      * @return a 2 dimensional array of Objects (columns x rows)
      */
+    @Override
     public Object[][] getData() {
         Object[][] data = new Object[_data.size()][4];
 

@@ -1,16 +1,22 @@
 package com.scotbaldry.msmoneytools.gui;
 
 import com.jhlabs.awt.ParagraphLayout;
-import com.scotbaldry.msmoneytools.FidelityFundPricesCSVParser;
-import com.scotbaldry.msmoneytools.MapperParser;
+import com.scotbaldry.msmoneytools.parsers.FidelityHoldingsCSVParser;
+import com.scotbaldry.msmoneytools.parsers.MapperParser;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.io.File;
+import java.text.ParseException;
 
 public class OFXBuilderGUI extends JFrame {
+    private MapperParser _mapperParser = new MapperParser();
+    private FidelityHoldingsCSVParser _holdingParser = new FidelityHoldingsCSVParser(_mapperParser);
+
+    private DefaultTableModel _mappingsTableModel = new DefaultTableModel();
+    private DefaultTableModel _holdingsTableModel = new DefaultTableModel();
 
     public OFXBuilderGUI(String title) {
         super(title);
@@ -31,7 +37,7 @@ public class OFXBuilderGUI extends JFrame {
         JTabbedPane tabbedPane = new JTabbedPane();
 
         JPanel tab1 = new JPanel();
-        DefaultTableModel tableModel1 = new DefaultTableModel(new Object[][]{}, FidelityFundPricesCSVParser.getColumns());
+        DefaultTableModel tableModel1 = new DefaultTableModel(new Object[][]{}, _holdingParser.getColumns());
         JTable table1 = new JTable(tableModel1);
         table1.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
         JScrollPane scrollPane1 = new JScrollPane(table1, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
@@ -39,8 +45,8 @@ public class OFXBuilderGUI extends JFrame {
         tabbedPane.addTab("Fidelity Holdings", tab1);
 
         JPanel tab2 = new JPanel();
-        DefaultTableModel tableModel2 = new DefaultTableModel(new Object[][]{}, MapperParser.getColumns());
-        JTable table2 = new JTable(tableModel2);
+        _mappingsTableModel = new DefaultTableModel(new Object[][]{}, _mapperParser.getColumns());
+        JTable table2 = new JTable(_mappingsTableModel);
         table2.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
         JScrollPane scrollPane2 = new JScrollPane(table2, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
         tab2.add(scrollPane2);
@@ -65,7 +71,16 @@ public class OFXBuilderGUI extends JFrame {
 
                 if (returnVal == JFileChooser.APPROVE_OPTION) {
                     File file = fc.getSelectedFile();
-                    fidelityHoldingsFile.setText(file.getName());
+                    fidelityHoldingsFile.setText(file.getAbsolutePath());
+                    startBusySafely();
+                    ParseHoldingsRunnable runnable = new ParseHoldingsRunnable(file.getAbsolutePath());
+                    runSafelyAsync(runnable);
+                    try {
+                        _holdingsTableModel.setDataVector(_holdingParser.getData(),
+                                _holdingParser.getColumns());
+                    } catch (ParseException e1) {
+                        //todo: raise dialog here
+                    }
                 }
             }
         });
@@ -79,12 +94,12 @@ public class OFXBuilderGUI extends JFrame {
 
                 if (returnVal == JFileChooser.APPROVE_OPTION) {
                     File file = fc.getSelectedFile();
-                    mappingsFile.setText(file.getName());
+                    mappingsFile.setText(file.getAbsolutePath());
                     startBusySafely();
-                    ParseMappingsRunnable runnable = new ParseMappingsRunnable(file.getName());
+                    ParseMappingsRunnable runnable = new ParseMappingsRunnable(file.getAbsolutePath());
                     runSafelyAsync(runnable);
-                    //TODO need access to the table model
-                    runnable.getParser().getData();
+                    _mappingsTableModel.setDataVector(_mapperParser.getData(),
+                            _mapperParser.getColumns());
                 }
             }
         });
@@ -160,23 +175,36 @@ public class OFXBuilderGUI extends JFrame {
         runSafelyAsync(r);
     }
 
+    private class ParseHoldingsRunnable implements Runnable {
+        private String _filename;
+
+        public ParseHoldingsRunnable(String filename) {
+            _filename = filename;
+        }
+
+        @Override
+        public void run() {
+            try {
+                _holdingParser.parse(new File(_filename));
+                endBusySafely(null);
+            } catch (Exception e) {
+                //TODO - dialog?
+                e.printStackTrace();
+            }
+        }
+    }
+
     private class ParseMappingsRunnable implements Runnable {
         private String _filename;
-        private MapperParser _parser;
 
         public ParseMappingsRunnable(String filename) {
             _filename = filename;
         }
 
-        public MapperParser getParser() {
-            return _parser;
-        }
-
         @Override
         public void run() {
-            _parser = new MapperParser(_filename);
             try {
-                _parser.parse();
+                _mapperParser.parse(new File(_filename));
                 endBusySafely(null);
             } catch (Exception e) {
                 //TODO - dialog?
