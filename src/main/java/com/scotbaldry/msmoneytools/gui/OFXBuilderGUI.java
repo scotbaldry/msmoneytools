@@ -1,15 +1,20 @@
 package com.scotbaldry.msmoneytools.gui;
 
 import com.jhlabs.awt.ParagraphLayout;
+import com.scotbaldry.msmoneytools.OFXBuilder;
 import com.scotbaldry.msmoneytools.parsers.FidelityHoldingsCSVParser;
 import com.scotbaldry.msmoneytools.parsers.MapperParser;
+import com.scotbaldry.ofxschema.OFX;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.text.ParseException;
+import java.util.Date;
 
 public class OFXBuilderGUI extends JFrame {
     private MapperParser _mapperParser = new MapperParser();
@@ -37,8 +42,8 @@ public class OFXBuilderGUI extends JFrame {
         JTabbedPane tabbedPane = new JTabbedPane();
 
         JPanel tab1 = new JPanel();
-        DefaultTableModel tableModel1 = new DefaultTableModel(new Object[][]{}, _holdingParser.getColumns());
-        JTable table1 = new JTable(tableModel1);
+        _holdingsTableModel = new DefaultTableModel(new Object[][]{}, _holdingParser.getColumns());
+        JTable table1 = new JTable(_holdingsTableModel);
         table1.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
         JScrollPane scrollPane1 = new JScrollPane(table1, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
         tab1.add(scrollPane1);
@@ -117,8 +122,28 @@ public class OFXBuilderGUI extends JFrame {
 
     private void buildButtonPanel() {
         JPanel buttonPanel = new JPanel();
-        JButton openOFX = new JButton();
-        JButton saveOFX = new JButton();
+
+        JButton openOFX = new JButton(new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    startBusySafely();
+                    OpenOFXRunnable runnable = new OpenOFXRunnable();
+                    runSafelyAsync(runnable);
+                    Desktop.getDesktop().open(null);
+                } catch (IOException e1) {
+                    //todo: dialog needed
+                    e1.printStackTrace();
+                }
+            }
+        });
+
+        JButton saveOFX = new JButton(new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                //todo: save file
+            }
+        });
 
         openOFX.setText("Import to MSMoney");
         saveOFX.setText("Save OFX File");
@@ -211,6 +236,26 @@ public class OFXBuilderGUI extends JFrame {
                 //TODO - dialog?
                 e.printStackTrace();
             }
+        }
+    }
+
+    private class OpenOFXRunnable implements Runnable {
+        @Override
+        public void run() {
+            try {
+                OFXBuilder ofxBuilder = new OFXBuilder(new Date(System.currentTimeMillis()), _holdingParser.getSecurityPrices());
+                OFX ofx = ofxBuilder.buildOFX();
+                //todo: make this a temp file
+                FileOutputStream fileOutputStream = new FileOutputStream("c:/develop/fidelity2holdings.ofx");
+                ofxBuilder.marshallXML(ofx, fileOutputStream);
+                Desktop.getDesktop().open();
+                endBusySafely(null);
+
+            } catch (Exception e) {
+                //TODO: dialog
+                e.printStackTrace();
+            }
+            //To change body of implemented methods use File | Settings | File Templates.
         }
     }
 

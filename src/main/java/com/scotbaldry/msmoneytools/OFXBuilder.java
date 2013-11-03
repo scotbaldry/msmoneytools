@@ -1,34 +1,30 @@
 package com.scotbaldry.msmoneytools;
 
 
+import java.io.OutputStream;
+import java.io.StringReader;
+import java.io.StringWriter;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
-import com.scotbaldry.ofxschema.BooleanType;
-import com.scotbaldry.ofxschema.Currency;
-import com.scotbaldry.ofxschema.CurrencyEnum;
-import com.scotbaldry.ofxschema.GeneralSecurityInfo;
-import com.scotbaldry.ofxschema.InvestmentAccount;
-import com.scotbaldry.ofxschema.InvestmentPosition;
-import com.scotbaldry.ofxschema.InvestmentPositionList;
-import com.scotbaldry.ofxschema.InvestmentStatementResponse;
-import com.scotbaldry.ofxschema.InvestmentStatementResponseMessageSetV1;
-import com.scotbaldry.ofxschema.InvestmentStatementTransactionResponse;
-import com.scotbaldry.ofxschema.MutualFundInfo;
-import com.scotbaldry.ofxschema.MutualFundTypeEnum;
-import com.scotbaldry.ofxschema.OFX;
-import com.scotbaldry.ofxschema.PositionMutualFund;
-import com.scotbaldry.ofxschema.PositionTypeEnum;
-import com.scotbaldry.ofxschema.SecurityId;
-import com.scotbaldry.ofxschema.SecurityList;
-import com.scotbaldry.ofxschema.SecurityListResponseMessageSetV1;
-import com.scotbaldry.ofxschema.SeverityEnum;
-import com.scotbaldry.ofxschema.SignonResponse;
-import com.scotbaldry.ofxschema.SignonResponseMessageSetV1;
-import com.scotbaldry.ofxschema.Status;
-import com.scotbaldry.ofxschema.SubAccountEnum;
+import com.scotbaldry.ofxschema.*;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.InputSource;
+
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBElement;
+import javax.xml.bind.Marshaller;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 
 public class OFXBuilder {
     private Date _valuationDate;
@@ -91,6 +87,56 @@ public class OFXBuilder {
         ofx.setSIGNONMSGSRSV1(signOnResponseMsgSet);
 
         return ofx;
+    }
+
+    public void marshallXML(OFX ofx, OutputStream out) {
+        try {
+            StringWriter writer = new StringWriter();
+
+            JAXBContext context = JAXBContext.newInstance(OFX.class);
+            Marshaller jaxbMarshaller = context.createMarshaller();
+            ObjectFactory objectFactory = new ObjectFactory();
+            JAXBElement<OFX> ofxElement = objectFactory.createOFX(ofx);
+
+            jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
+            jaxbMarshaller.setProperty(Marshaller.JAXB_FRAGMENT, true);
+            jaxbMarshaller.marshal(ofxElement, writer);
+
+            // Convert to DOM so we can adjust the XML suitable for MS Money Import!
+            Document xmlDOM = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new InputSource(new StringReader(writer.toString())));
+            mungeRootElement(xmlDOM);
+
+            // Output the Document
+            TransformerFactory tf = TransformerFactory.newInstance();
+            Transformer t = tf.newTransformer();
+            t.setOutputProperty(OutputKeys.INDENT, "yes");
+            DOMSource source = new DOMSource(xmlDOM);
+            out.write("<?OFX OFXHEADER=\"200\" VERSION=\"200\" SECURITY=\"NONE\" OLDFILEUID=\"NONE\" NEWFILEUID=\"NONE\"?>\n".getBytes());
+            StreamResult result = new StreamResult(out);
+            t.transform(source, result);
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Sadly since MS Money does not handle any form of namespaces (!!) we have to manipulate the root element to
+     * strip the namespace prefix and the xmlns attribute. Very crude way of doing this but not worth starting
+     * an XSLT transform...
+     *
+     * @param xml document to be manipulated
+     */
+    public static void mungeRootElement(Document xml) {
+        Node root = xml.getDocumentElement();
+        NodeList rootchildren = root.getChildNodes();
+        Element newroot = xml.createElement("OFX");
+
+        for (int i = 0; i < rootchildren.getLength(); i++) {
+            newroot.appendChild(rootchildren.item(i).cloneNode(true));
+        }
+
+        xml.replaceChild(newroot, root);
     }
 
     private MutualFundInfo buildMutualFundInfo(String symbol, String securityName, String ccy, String price, Date date) {
