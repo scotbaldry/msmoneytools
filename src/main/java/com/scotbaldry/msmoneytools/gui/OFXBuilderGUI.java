@@ -15,6 +15,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.Date;
+import java.util.Map;
 
 public class OFXBuilderGUI extends JFrame {
     private MapperParser _mapperParser = new MapperParser();
@@ -126,15 +127,9 @@ public class OFXBuilderGUI extends JFrame {
         JButton openOFX = new JButton(new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                try {
-                    startBusySafely();
-                    OpenOFXRunnable runnable = new OpenOFXRunnable();
-                    runSafelyAsync(runnable);
-                    Desktop.getDesktop().open(null);
-                } catch (IOException e1) {
-                    //todo: dialog needed
-                    e1.printStackTrace();
-                }
+                startBusySafely();
+                OpenOFXRunnable runnable = new OpenOFXRunnable();
+                runSafelyAsync(runnable);
             }
         });
 
@@ -245,10 +240,10 @@ public class OFXBuilderGUI extends JFrame {
             try {
                 OFXBuilder ofxBuilder = new OFXBuilder(new Date(System.currentTimeMillis()), _holdingParser.getSecurityPrices());
                 OFX ofx = ofxBuilder.buildOFX();
-                //todo: make this a temp file
-                FileOutputStream fileOutputStream = new FileOutputStream("c:/develop/fidelity2holdings.ofx");
+                File tempFile = File.createTempFile("statement", ".ofx");
+                FileOutputStream fileOutputStream = new FileOutputStream(tempFile);
                 ofxBuilder.marshallXML(ofx, fileOutputStream);
-                Desktop.getDesktop().open();
+                Desktop.getDesktop().open(tempFile);
                 endBusySafely(null);
 
             } catch (Exception e) {
@@ -256,6 +251,22 @@ public class OFXBuilderGUI extends JFrame {
                 e.printStackTrace();
             }
             //To change body of implemented methods use File | Settings | File Templates.
+        }
+    }
+
+    private class SaveOFXRunnable implements Runnable {
+        @Override
+        public void run() {
+            OFXBuilder ofxBuilder = null;
+            try {
+                ofxBuilder = new OFXBuilder(new Date(System.currentTimeMillis()), _holdingParser.getSecurityPrices());
+                OFX ofx = ofxBuilder.buildOFX();
+                Map<String, String> envVars = System.getenv();
+                File downloadsDir = new File(envVars.get("HOME") + File.separator + "Downloads");
+                //todo: open file save dialog
+            } catch (Exception e) {
+                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            }
         }
     }
 
